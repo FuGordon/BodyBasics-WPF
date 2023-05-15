@@ -140,6 +140,16 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private string statusText = null;
 
         /// <summary>
+        /// Reader for depth frames
+        /// </summary>
+        private DepthFrameReader depthFrameReader = null;
+
+        /// <summary>
+        /// Description of the data contained in the depth frame
+        /// </summary>
+        private FrameDescription depthFrameDescription = null;
+
+        /// <summary>
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
         public MainWindow()
@@ -151,14 +161,21 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.coordinateMapper = this.kinectSensor.CoordinateMapper;
 
             // get the depth (display) extents
-            FrameDescription frameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
+            this.depthFrameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
 
             // get size of joint space
-            this.displayWidth = frameDescription.Width;
-            this.displayHeight = frameDescription.Height;
+            this.displayWidth = this.depthFrameDescription.Width;
+            this.displayHeight = this.depthFrameDescription.Height;
+
 
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
+
+            // open the reader for the depth frames
+            this.depthFrameReader = this.kinectSensor.DepthFrameSource.OpenReader();
+
+            // wire handler for frame arrival
+            this.depthFrameReader.FrameArrived += this.Reader_FrameArrived;
 
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
@@ -228,6 +245,47 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             // initialize the components (controls) of the window
             this.InitializeComponent();
+        }
+
+        /// <summary>
+        /// Handles the depth frame data arriving from the sensor
+        /// </summary>
+        /// <param name="sender">object sending the event</param>
+        /// <param name="e">event arguments</param>
+        private void Reader_FrameArrived(object sender, DepthFrameArrivedEventArgs e)
+        {
+            bool depthFrameProcessed = false;
+
+            using (DepthFrame depthFrame = e.FrameReference.AcquireFrame())
+            {
+                if (depthFrame != null)
+                {
+                    // the fastest way to process the body index data is to directly access 
+                    // the underlying buffer
+                    using (Microsoft.Kinect.KinectBuffer depthBuffer = depthFrame.LockImageBuffer())
+                    {
+                        // verify data and write the color data to the display bitmap
+                        if (((this.displayWidth * this.displayHeight) == (depthBuffer.Size / this.depthFrameDescription.BytesPerPixel)) &&
+                            (this.depthFrameDescription.Width == this.depthBitmap.PixelWidth) && (this.depthFrameDescription.Height == this.depthBitmap.PixelHeight))
+                        {
+                            // Note: In order to see the full range of depth (including the less reliable far field depth)
+                            // we are setting maxDepth to the extreme potential depth threshold
+                            ushort maxDepth = ushort.MaxValue;
+
+                            // If you wish to filter by reliable depth distance, uncomment the following line:
+                            // maxDepth = depthFrame.DepthMaxReliableDistance;
+
+                            this.ProcessDepthFrameData(depthBuffer.UnderlyingBuffer, depthBuffer.Size, depthFrame.DepthMinReliableDistance, maxDepth);
+                            depthFrameProcessed = true;
+                        }
+                    }
+                }
+            }
+
+            if (depthFrameProcessed)
+            {
+                this.RenderDepthPixels();
+            }
         }
 
         /// <summary>
