@@ -149,6 +149,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private FrameDescription depthFrameDescription = null;
 
+        private ushort[] depthArr = null;
+
+
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
@@ -175,7 +178,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.depthFrameReader = this.kinectSensor.DepthFrameSource.OpenReader();
 
             // wire handler for frame arrival
-            this.depthFrameReader.FrameArrived += this.Reader_FrameArrived;
+            this.depthFrameReader.FrameArrived += this.DReader_FrameArrived;
 
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
@@ -252,7 +255,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         /// <param name="sender">object sending the event</param>
         /// <param name="e">event arguments</param>
-        private void Reader_FrameArrived(object sender, DepthFrameArrivedEventArgs e)
+        private void DReader_FrameArrived(object sender, DepthFrameArrivedEventArgs e)
         {
             bool depthFrameProcessed = false;
 
@@ -265,8 +268,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     using (Microsoft.Kinect.KinectBuffer depthBuffer = depthFrame.LockImageBuffer())
                     {
                         // verify data and write the color data to the display bitmap
-                        if (((this.displayWidth * this.displayHeight) == (depthBuffer.Size / this.depthFrameDescription.BytesPerPixel)) &&
-                            (this.depthFrameDescription.Width == this.depthBitmap.PixelWidth) && (this.depthFrameDescription.Height == this.depthBitmap.PixelHeight))
+                        if ((this.displayWidth * this.displayHeight) == (depthBuffer.Size / this.depthFrameDescription.BytesPerPixel))
                         {
                             // Note: In order to see the full range of depth (including the less reliable far field depth)
                             // we are setting maxDepth to the extreme potential depth threshold
@@ -284,7 +286,30 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             if (depthFrameProcessed)
             {
-                this.RenderDepthPixels();
+                
+            }
+        }
+
+        /// <summary>
+        /// Directly accesses the underlying image buffer of the DepthFrame to 
+        /// create a displayable bitmap.
+        /// This function requires the /unsafe compiler option as we make use of direct
+        /// access to the native memory pointed to by the depthFrameData pointer.
+        /// </summary>
+        /// <param name="depthFrameData">Pointer to the DepthFrame image data</param>
+        /// <param name="depthFrameDataSize">Size of the DepthFrame image data</param>
+        /// <param name="minDepth">The minimum reliable depth value for the frame</param>
+        /// <param name="maxDepth">The maximum reliable depth value for the frame</param>
+        private unsafe void ProcessDepthFrameData(IntPtr depthFrameData, uint depthFrameDataSize, ushort minDepth, ushort maxDepth)
+        {
+            // depth frame data is a 16 bit value
+            ushort* frameData = (ushort*)depthFrameData;
+
+            // iterate depth array
+            for (int i = 0; i < (int)(depthFrameDataSize / this.depthFrameDescription.BytesPerPixel); ++i)
+            {
+                // Get the depth for this pixel
+                this.depthArr[i] = frameData[i];
             }
         }
 
@@ -425,7 +450,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
 
                                 //讀取各節點XY數值
-                                if(jointType== JointType.ShoulderRight)
+                                if(jointType == JointType.ShoulderRight)
                                 {
                                     label1.Content = depthSpacePoint.Y;
                                     a1 = (int)depthSpacePoint.Y;
