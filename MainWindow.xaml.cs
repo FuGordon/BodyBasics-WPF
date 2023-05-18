@@ -525,6 +525,19 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         }
                     }
 
+                    if (bodynumber < 1)
+                    {
+                        label_handup_r_first.Content = "No Data";
+                        label_hand_r_first.Content = "No Data";
+                        label_shoulder_r_first.Content = "No Data";
+                    }
+                    if (bodynumber < 2)
+                    {
+                        label_handup_r_second.Content = "No Data";
+                        label_hand_r_second.Content = "No Data";
+                        label_shoulder_r_second.Content = "No Data";
+                    }
+
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
