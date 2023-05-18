@@ -144,7 +144,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private bool handUp = false;
         private bool hitTheBall = false;
-        private int hitNum = 0;
+        private int hitNum_first = 0;
+        private int hitNum_second = 0;
 
         /// <summary>
         /// Reader for depth frames
@@ -429,12 +430,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
 
                     int penIndex = 0;
+                    int bodynumber = 0;
                     foreach (Body body in this.bodies)
                     {
                         Pen drawPen = this.bodyColors[penIndex++];
 
                         if (body.IsTracked)
                         {
+                            bodynumber++;
                             int my_rightShoulder = 0, my_rightHand = 0, my_rightElbow = 0;
                             this.DrawClippedEdges(body, dc);
 
@@ -459,18 +462,23 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 //讀取各節點XY數值
                                 if (jointType == JointType.ShoulderRight)
                                 {
-                                    label_shoulder_r.Content = depthSpacePoint.Y;
+                                    if (bodynumber == 1)
+                                        label_shoulder_r_first.Content = depthSpacePoint.Y;
+                                    if (bodynumber == 2)
+                                        label_shoulder_r_second.Content = depthSpacePoint.Y;
                                     my_rightShoulder = (int)depthSpacePoint.Y;
                                 }
                                 if (jointType == JointType.HandRight)
                                 {
-                                    label_hand_r.Content = depthSpacePoint.Y;
+                                    if (bodynumber == 1)
+                                        label_handup_r_first.Content = depthSpacePoint.Y;
+                                    if (bodynumber == 2)
+                                        label_handup_r_second.Content = depthSpacePoint.Y;
                                     //label_attack.Content = penIndex;
                                     my_rightHand = (int)depthSpacePoint.Y;
                                 }
                                 if (jointType == JointType.ElbowRight)
                                 {
-
                                     my_rightElbow = (int)depthSpacePoint.Y;
                                 }
 
@@ -479,7 +487,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                             if (my_rightElbow < my_rightShoulder)
                             {
                                 handUp = true;
-                                label_handup_r.Content = "yes";
+                                if (bodynumber == 1)
+                                    label_handup_r_first.Content = "yes";
+                                if (bodynumber == 2)
+                                    label_handup_r_second.Content = "yes";
                             }
 
                             if (handUp)
@@ -487,14 +498,24 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 if (my_rightElbow > my_rightShoulder && body.HandRightState == HandState.Closed)
                                 {
                                     hitTheBall = true;
-                                    label_attack.Content = ++hitNum;
+                                    if (bodynumber == 1)
+                                    {
+                                        label_attack_first.Content = ++hitNum_first;
+                                    }
+                                    if (bodynumber == 2)
+                                    {
+                                        label_attack_second.Content = ++hitNum_second;
+                                    }
 
                                 }
                             }
                             if (my_rightElbow > my_rightShoulder)
                             {
                                 handUp = false;
-                                label_handup_r.Content = "No";
+                                if (bodynumber == 1)
+                                    label_handup_r_first.Content = "No";
+                                if (bodynumber == 2)
+                                    label_handup_r_second.Content = "No";
                                 hitTheBall = false;
                             }
                             //
