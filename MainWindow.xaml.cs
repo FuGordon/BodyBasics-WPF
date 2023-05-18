@@ -140,6 +140,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private string statusText = null;
 
         /// <summary>
+        /// 判斷擊球相關變數
+        /// </summary>
+        private bool handUp = false;
+        private bool hitTheBall = false;
+        private int hitNum = 0;
+
+        /// <summary>
         /// Reader for depth frames
         /// </summary>
         private DepthFrameReader depthFrameReader = null;
@@ -425,10 +432,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     foreach (Body body in this.bodies)
                     {
                         Pen drawPen = this.bodyColors[penIndex++];
-                        
+
                         if (body.IsTracked)
                         {
-                            int a1 = 0, a2 = 0;
+                            int my_rightShoulder = 0, my_rightHand = 0, my_rightElbow = 0;
                             this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
@@ -450,29 +457,47 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
 
                                 //讀取各節點XY數值
-                                if(jointType == JointType.ShoulderRight)
+                                if (jointType == JointType.ShoulderRight)
                                 {
-                                    label1.Content = depthSpacePoint.Y;
-                                    a1 = (int)depthSpacePoint.Y;
+                                    label_shoulder_r.Content = depthSpacePoint.Y;
+                                    my_rightShoulder = (int)depthSpacePoint.Y;
                                 }
                                 if (jointType == JointType.HandRight)
                                 {
-                                    label2.Content = depthSpacePoint.Y;
-                                    a2 = (int)depthSpacePoint.Y;
+                                    label_hand_r.Content = depthSpacePoint.Y;
+                                    //label_attack.Content = penIndex;
+                                    my_rightHand = (int)depthSpacePoint.Y;
+                                }
+                                if (jointType == JointType.ElbowRight)
+                                {
+
+                                    my_rightElbow = (int)depthSpacePoint.Y;
                                 }
 
-
                             }
 
-                            if(a1>a2)
+                            if (my_rightElbow < my_rightShoulder)
                             {
-                                label.Content = "yes";
+                                handUp = true;
+                                label_handup_r.Content = "yes";
+                            }
 
-                            }
-                            else
+                            if (handUp)
                             {
-                                label.Content = "false";
+                                if (my_rightElbow > my_rightShoulder && body.HandRightState == HandState.Closed)
+                                {
+                                    hitTheBall = true;
+                                    label_attack.Content = ++hitNum;
+
+                                }
                             }
+                            if (my_rightElbow > my_rightShoulder)
+                            {
+                                handUp = false;
+                                label_handup_r.Content = "No";
+                                hitTheBall = false;
+                            }
+                            //
                             this.DrawBody(joints, jointPoints, dc, drawPen);
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);

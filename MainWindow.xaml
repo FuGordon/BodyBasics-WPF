@@ -11,25 +11,27 @@
         <SolidColorBrush x:Key="KinectBlueBrush" Color="#ff00BCF2" />
     </Window.Resources>
     <Grid Margin="10 0 10 0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="397*"/>
+            <ColumnDefinition Width="275*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        <Image Grid.Row="0" Source="Images\Status.png" Stretch="None" HorizontalAlignment="Center" Margin="311,0,36,5" />
 
-        <Image Grid.Row="0" Source="Images\Logo.png" HorizontalAlignment="Left" Stretch="Fill" Height="32" Width="81" Margin="0 10 0 5" />
-        <TextBlock Grid.Row="0" Margin="0 0 -1 0" HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}" FontFamily="Segoe UI" FontSize="18">Body Basics</TextBlock>
-        <Image Grid.Row="0" Source="Images\Status.png" Stretch="None" HorizontalAlignment="Center" Margin="0 0 0 5" />
-
-        <Viewbox Grid.Row="1" HorizontalAlignment="Center">
+        <Viewbox Grid.Row="1" HorizontalAlignment="Center" Margin="336,0,61,0">
             <Image Source="{Binding ImageSource}" Stretch="UniformToFill" />
         </Viewbox>
 
-        <StatusBar Grid.Row="2" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
+        <StatusBar Grid.Row="2" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}" Grid.ColumnSpan="2">
             <StatusBarItem Content="{Binding StatusText}" />
         </StatusBar>
-        <Label x:Name="label" Content="Label" HorizontalAlignment="Left" Margin="121,14,0,0" VerticalAlignment="Top" Height="80" Width="85" FontSize="20" Grid.RowSpan="2"/>
-        <Label x:Name="label1" Content="Label" HorizontalAlignment="Left" Margin="366,14,0,0" VerticalAlignment="Top" Height="80" Width="85" FontSize="20" Grid.RowSpan="2"/>
-        <Label x:Name="label2" Content="Label" HorizontalAlignment="Left" Margin="451,14,0,0" VerticalAlignment="Top" Height="80" Width="85" FontSize="20" Grid.RowSpan="2"/>
+        <Label x:Name="label_handup_r" Content="label_handup_r" HorizontalAlignment="Left" Margin="107,14,0,0" VerticalAlignment="Top" Height="80" Width="85" FontSize="20" Grid.RowSpan="2"/>
+        <Label x:Name="label_shoulder_r" Content="label_shoulder_r" HorizontalAlignment="Left" Margin="366,14,0,0" VerticalAlignment="Top" Height="80" Width="85" FontSize="20" Grid.RowSpan="2" Grid.ColumnSpan="2"/>
+        <Label x:Name="label_hand_r" Content="label_hand_r" HorizontalAlignment="Left" Margin="69,14,0,0" VerticalAlignment="Top" Height="80" Width="85" FontSize="20" Grid.RowSpan="2" Grid.Column="1"/>
+        <Label x:Name="label_attack" Content="label_attack" HorizontalAlignment="Left" Margin="209,14,0,0" VerticalAlignment="Top" Height="80" Width="85" FontSize="20" Grid.RowSpan="2"/>
     </Grid>
 </Window>
