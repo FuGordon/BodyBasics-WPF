@@ -154,10 +154,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private int depthLocation = 0, depth = 0;
         private int xValue = 0, yValue = 0;
         private int rightHandYValue = 0, rightShoulderYValue = 0, rightElbowYVlue = 0;
-        private bool highHand = false, righthandAttackPlayer1 = false;
+        private bool highHand = false;
         private bool lastHighHandPlayer1 = false, lastHighHandPlayer2 = false;
         private bool handAttackPlayer1 = false, handAttackPlayer2 = false;
-        private int player1AttackTimes = 0, player2AttackTimes = 0;
+        private int highAttackTimesPlayer1 = 0, lowAttackTimesPlayer1 = 0;
+        private int highAttackTimesPlayer2 = 0, lowAttackTimesPlayer2 = 0;
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -469,7 +470,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     yValue = (int)depthSpacePoint.Y;
                                     xValue = (int)depthSpacePoint.X;
                                     depthLocation = yValue * this.displayWidth + xValue;
-                                    depth += this.depthArr[depthLocation];
+                                    if (depthLocation >= 0 && depthLocation < this.displayWidth * this.displayHeight)
+                                        depth += this.depthArr[depthLocation];
                                 }
                                 if (jointType == JointType.ShoulderRight)
                                 {
@@ -492,6 +494,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                             }
 
                             depth /= 4;
+
                             if(rightHandYValue < rightElbowYVlue) //越往下y值越大
                             {
                                 highHand = true;
@@ -512,11 +515,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     handAttackPlayer1 = true;
                                 }
 
-                                player1_depth.Content = depth;
-
                                 if(highHand)
                                 {
                                     player1_hand_type.Content = "High";
+                                    if (lastHighHandPlayer1 != highHand)
+                                    {
+                                        if (handAttackPlayer1)
+                                            lowAttackTimesPlayer1++;
+                                    }
                                 }
                                 else
                                 {
@@ -524,12 +530,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     if(lastHighHandPlayer1 != highHand)
                                     {
                                         if(handAttackPlayer1)
-                                            player1AttackTimes++;
+                                            highAttackTimesPlayer1++;
                                     }
                                 }
                                 lastHighHandPlayer1 = highHand;
 
-                                player1_high_attack_times.Content = player1AttackTimes;
+                                player1_high_attack_times.Content = highAttackTimesPlayer1;
+                                player1_low_attack_times.Content = lowAttackTimesPlayer1;
+                                player1_depth.Content = depth;
                             }
                             if (bodyNumber == 2)
                             {
@@ -542,11 +550,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     handAttackPlayer2 = true;
                                 }
 
-                                player2_depth.Content = depth;
-
                                 if (highHand)
                                 {
-                                    player2_hand_type.Content = "High";
+                                    player1_hand_type.Content = "High";
+                                    if (lastHighHandPlayer2 != highHand)
+                                    {
+                                        if (handAttackPlayer2)
+                                            lowAttackTimesPlayer2++;
+                                    }
                                 }
                                 else
                                 {
@@ -554,12 +565,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     if (lastHighHandPlayer2 != highHand)
                                     {
                                         if (handAttackPlayer2)
-                                            player2AttackTimes++;
+                                            highAttackTimesPlayer2++;
                                     }
                                 }
                                 lastHighHandPlayer2 = highHand;
 
-                                player2_attack_times.Content = player2AttackTimes;
+                                player2_high_attack_times.Content = highAttackTimesPlayer2;
+                                player2_low_attack_times.Content = lowAttackTimesPlayer2;
+                                player2_depth.Content = depth;
                             }
 
                             this.DrawBody(joints, jointPoints, dc, drawPen);
@@ -574,15 +587,17 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         player1_high_attack_times.Content = "No Data";
                         player1_low_attack_times.Content = "No Data";
                         player1_hand_type.Content = "No Data";
-                        player1AttackTimes = 0;
+                        highAttackTimesPlayer1 = 0;
+                        lowAttackTimesPlayer1 = 0;
                     }
                     if (bodyNumber < 2)
                     {
                         player2_depth.Content = "No Data";
-                        player2_attack_times.Content = "No Data";
-                        player2_y.Content = "No Data";
+                        player2_high_attack_times.Content = "No Data";
+                        player2_low_attack_times.Content = "No Data";
                         player2_hand_type.Content = "No Data";
-                        player2AttackTimes = 0;
+                        highAttackTimesPlayer2 = 0;
+                        lowAttackTimesPlayer2 = 0;
                     }
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
