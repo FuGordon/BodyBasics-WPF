@@ -151,14 +151,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         private ushort[] depthArr = { };
 
-        private int depthLocation = 0, depth = 0;
-        private int xValue = 0, yValue = 0;
-        private int rightHandYValue = 0, rightShoulderYValue = 0, rightElbowYVlue = 0;
-        private bool highHand = false;
-        private bool lastHighHandPlayer1 = false, lastHighHandPlayer2 = false;
-        private bool handAttackPlayer1 = false, handAttackPlayer2 = false;
-        private int highAttackTimesPlayer1 = 0, lowAttackTimesPlayer1 = 0;
-        private int highAttackTimesPlayer2 = 0, lowAttackTimesPlayer2 = 0;
+        private int depthLocation = 0; //給depthArr的index值 
+        private int depth = 0; //節點的深度值
+        private int xValue = 0, yValue = 0; //各節點的xy值
+        private int rightHandYValue = 0, rightShoulderYValue = 0, rightElbowYVlue = 0; //右手掌、右手肘、右肩 三者的y值
+        private bool highHand = false; //是否為高手 true為高手 false為低手
+        private bool lastHighHandPlayer1 = false, lastHighHandPlayer2 = false; //前一高低手狀態
+        private bool handAttackPlayer1 = false, handAttackPlayer2 = false; //是否為攻擊手勢(握拳) true為握拳 false為不握拳
+        private int highAttackTimesPlayer1 = 0, lowAttackTimesPlayer1 = 0; //計算player1高低手擊球次數
+        private int highAttackTimesPlayer2 = 0, lowAttackTimesPlayer2 = 0; //計算player2高低手擊球次數
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -430,14 +431,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
 
                     int penIndex = 0;
-                    int bodyNumber = 0;
+                    int bodyNumber = 0; //判斷偵測人數
                     foreach (Body body in this.bodies)
                     {
                         Pen drawPen = this.bodyColors[penIndex++];
                         
-                        if (body.IsTracked)
+                        if (body.IsTracked) //當有偵測到人
                         {
-                            bodyNumber++;
+                            bodyNumber++; //偵測人數+1
                             this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
@@ -445,12 +446,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                             // convert the joint points to depth (display) space
                             Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
 
-                            ///get value
+                            //初始化各項數值
                             depthLocation = 0; depth = 0;
                             xValue = 0; yValue = 0;
                             rightHandYValue = 0; rightShoulderYValue = 0; rightElbowYVlue = 0;
                             highHand = false;
 
+                            //偵測各節點
                             foreach (JointType jointType in joints.Keys)
                             {
                                 // sometimes the depth(Z) of an inferred joint may show as negative
@@ -465,27 +467,30 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
 
                                 //讀取各節點XY數值
-                                if (jointType == JointType.SpineBase || jointType == JointType.SpineMid || jointType == JointType.HipLeft || jointType == JointType.HipRight)
+                                if (jointType == JointType.SpineBase || 
+                                    jointType == JointType.SpineMid || 
+                                    jointType == JointType.HipLeft || 
+                                    jointType == JointType.HipRight) //當偵測到骨盆4節點
                                 {
-                                    yValue = (int)depthSpacePoint.Y;
-                                    xValue = (int)depthSpacePoint.X;
-                                    depthLocation = yValue * this.displayWidth + xValue;
-                                    if (depthLocation >= 0 && depthLocation < this.displayWidth * this.displayHeight)
-                                        depth += this.depthArr[depthLocation];
+                                    yValue = (int)depthSpacePoint.Y; //讀取該節點y值
+                                    xValue = (int)depthSpacePoint.X; //讀取該節點x值
+                                    depthLocation = yValue * this.displayWidth + xValue; //計算depthLocation (depthArr的index值)
+                                    if (depthLocation >= 0 && depthLocation < this.displayWidth * this.displayHeight) //判斷depthLocation是否在合理範圍內
+                                        depth += this.depthArr[depthLocation]; //得出該節點深度值並加進depth
                                 }
-                                if (jointType == JointType.ShoulderRight)
+                                if (jointType == JointType.ShoulderRight) //當偵測到右肩膀
                                 {
-                                    yValue = (int)depthSpacePoint.Y;
+                                    yValue = (int)depthSpacePoint.Y; //讀取該節點y值
                                     rightShoulderYValue = yValue;
                                 }
-                                if (jointType == JointType.ElbowRight)
+                                if (jointType == JointType.ElbowRight) //當偵測到右手肘
                                 {
-                                    yValue = (int)depthSpacePoint.Y;
+                                    yValue = (int)depthSpacePoint.Y; //讀取該節點y值
                                     rightElbowYVlue = yValue;
                                 }
-                                if (jointType == JointType.HandRight)
+                                if (jointType == JointType.HandRight) //當偵測到右手掌
                                 {
-                                    yValue = (int)depthSpacePoint.Y;
+                                    yValue = (int)depthSpacePoint.Y; //讀取該節點y值
                                     rightHandYValue = yValue;
                                 }
 
@@ -493,8 +498,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
                             }
 
-                            depth /= 4;
+                            depth /= 4; //將深度值除以4(取平均值)
 
+                            //判斷高低手
                             if(rightHandYValue < rightElbowYVlue) //越往下y值越大
                             {
                                 highHand = true;
@@ -504,84 +510,109 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 highHand = false;
                             }
 
-                            if (bodyNumber == 1)
+                            if (bodyNumber == 1) //當目前偵測到的人為player1
                             {
-                                if (body.HandRightState == HandState.Open)
+                                //若手掌張開或半開 解除攻擊模式
+                                if (body.HandRightState == HandState.Open || body.HandRightState == HandState.Lasso)
                                 {
                                     handAttackPlayer1 = false;
                                 }
+                                //若手掌閉合 進入攻擊模式
                                 if (body.HandRightState == HandState.Closed)
                                 {
                                     handAttackPlayer1 = true;
                                 }
+                                //若未偵測手掌模式 維持目前狀態
 
-                                if(highHand)
+                                //當現在為高手狀態
+                                if(highHand) 
                                 {
                                     player1_hand_type.Content = "High";
+
+                                    //如果前一狀態為低手
                                     if (lastHighHandPlayer1 != highHand)
                                     {
+                                        //如果為攻擊狀態 低手攻擊+1
                                         if (handAttackPlayer1)
                                             lowAttackTimesPlayer1++;
                                     }
                                 }
+                                //當現在為低手狀態
                                 else
                                 {
                                     player1_hand_type.Content = "Low";
-                                    if(lastHighHandPlayer1 != highHand)
+
+                                    //如果前一狀態為高手
+                                    if (lastHighHandPlayer1 != highHand)
                                     {
-                                        if(handAttackPlayer1)
+                                        //如果為攻擊狀態 高手攻擊+1
+                                        if (handAttackPlayer1)
                                             highAttackTimesPlayer1++;
                                     }
                                 }
-                                lastHighHandPlayer1 = highHand;
+                                lastHighHandPlayer1 = highHand; //將前一狀態改為目前狀態
 
+                                //顯示數值
                                 player1_high_attack_times.Content = highAttackTimesPlayer1;
                                 player1_low_attack_times.Content = lowAttackTimesPlayer1;
                                 player1_depth.Content = depth;
                             }
-                            if (bodyNumber == 2)
+                            if (bodyNumber == 2) //當目前偵測到的人為player1
                             {
+                                //若手掌張開或半開 解除攻擊模式
                                 if (body.HandRightState == HandState.Open)
                                 {
                                     handAttackPlayer2 = false;
                                 }
+                                //若手掌閉合 進入攻擊模式
                                 if (body.HandRightState == HandState.Closed)
                                 {
                                     handAttackPlayer2 = true;
                                 }
+                                //若未偵測手掌模式 維持目前狀態
 
+                                //當現在為高手狀態
                                 if (highHand)
                                 {
                                     player1_hand_type.Content = "High";
+
+                                    //如果前一狀態為低手
                                     if (lastHighHandPlayer2 != highHand)
                                     {
+                                        //如果為攻擊狀態 低手攻擊+1
                                         if (handAttackPlayer2)
                                             lowAttackTimesPlayer2++;
                                     }
                                 }
+                                //當現在為低手狀態
                                 else
                                 {
                                     player1_hand_type.Content = "Low";
+
+                                    //如果前一狀態為高手
                                     if (lastHighHandPlayer2 != highHand)
                                     {
+                                        //如果為攻擊狀態 高手攻擊+1
                                         if (handAttackPlayer2)
                                             highAttackTimesPlayer2++;
                                     }
                                 }
-                                lastHighHandPlayer2 = highHand;
+                                lastHighHandPlayer2 = highHand; //將前一狀態改為目前狀態
 
                                 player2_high_attack_times.Content = highAttackTimesPlayer2;
                                 player2_low_attack_times.Content = lowAttackTimesPlayer2;
                                 player2_depth.Content = depth;
                             }
 
+                            //顯示數值
                             this.DrawBody(joints, jointPoints, dc, drawPen);
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
                         }
                     }
 
-                    if(bodyNumber<1)
+                    //若偵測人數少於1人將player1個數值顯示no data
+                    if(bodyNumber < 1)
                     {
                         player1_depth.Content = "No Data";
                         player1_high_attack_times.Content = "No Data";
@@ -590,6 +621,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         highAttackTimesPlayer1 = 0;
                         lowAttackTimesPlayer1 = 0;
                     }
+
+                    //若偵測人數少於2人將player2個數值顯示no data
                     if (bodyNumber < 2)
                     {
                         player2_depth.Content = "No Data";
@@ -599,6 +632,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         highAttackTimesPlayer2 = 0;
                         lowAttackTimesPlayer2 = 0;
                     }
+
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
