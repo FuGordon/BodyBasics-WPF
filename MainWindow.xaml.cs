@@ -151,6 +151,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         private ushort[] depthArr = { };
 
+        private int depthLocation = 0, depth = 0;
+        private int xValue = 0, yValue = 0;
+        private int rightHandYValue = 0, rightShoulderYValue = 0, rightElbowYVlue = 0;
+        private bool highHand = false, righthandAttackPlayer1 = false;
+        private bool lastHighHandPlayer1 = false, lastHighHandPlayer2 = false;
+        private bool handAttackPlayer1 = false, handAttackPlayer2 = false;
+        private int player1AttackTimes = 0, player2AttackTimes = 0;
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -438,10 +445,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                             Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
 
                             ///get value
-                            int depthLocation = 0, depth = 0;
-                            int xValue = 0, yValue = 0;
-                            int rightHandYValue = 0, rightShoulderYValue = 0, rightElbowYVlue = 0;
-                            bool highHand = false;
+                            depthLocation = 0; depth = 0;
+                            xValue = 0; yValue = 0;
+                            rightHandYValue = 0; rightShoulderYValue = 0; rightElbowYVlue = 0;
+                            highHand = false;
 
                             foreach (JointType jointType in joints.Keys)
                             {
@@ -479,6 +486,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     yValue = (int)depthSpacePoint.Y;
                                     rightHandYValue = yValue;
                                 }
+
+
+
                             }
 
                             depth /= 4;
@@ -491,9 +501,19 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 highHand = false;
                             }
 
-                            if(bodyNumber == 1)
+                            if (bodyNumber == 1)
                             {
+                                if (body.HandRightState == HandState.Open)
+                                {
+                                    handAttackPlayer1 = false;
+                                }
+                                if (body.HandRightState == HandState.Closed)
+                                {
+                                    handAttackPlayer1 = true;
+                                }
+
                                 player1_depth.Content = depth;
+
                                 if(highHand)
                                 {
                                     player1_hand_type.Content = "High";
@@ -501,19 +521,45 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 else
                                 {
                                     player1_hand_type.Content = "Low";
+                                    if(lastHighHandPlayer1 != highHand)
+                                    {
+                                        if(handAttackPlayer1)
+                                            player1AttackTimes++;
+                                    }
                                 }
+                                lastHighHandPlayer1 = highHand;
+
+                                player1_high_attack_times.Content = player1AttackTimes;
                             }
                             if (bodyNumber == 2)
                             {
+                                if (body.HandRightState == HandState.Open)
+                                {
+                                    handAttackPlayer2 = false;
+                                }
+                                if (body.HandRightState == HandState.Closed)
+                                {
+                                    handAttackPlayer2 = true;
+                                }
+
                                 player2_depth.Content = depth;
+
                                 if (highHand)
                                 {
                                     player2_hand_type.Content = "High";
                                 }
                                 else
                                 {
-                                    player2_hand_type.Content = "Low";
+                                    player1_hand_type.Content = "Low";
+                                    if (lastHighHandPlayer2 != highHand)
+                                    {
+                                        if (handAttackPlayer2)
+                                            player2AttackTimes++;
+                                    }
                                 }
+                                lastHighHandPlayer2 = highHand;
+
+                                player2_attack_times.Content = player2AttackTimes;
                             }
 
                             this.DrawBody(joints, jointPoints, dc, drawPen);
@@ -525,16 +571,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     if(bodyNumber<1)
                     {
                         player1_depth.Content = "No Data";
-                        player1_x.Content = "No Data";
-                        player1_y.Content = "No Data";
+                        player1_high_attack_times.Content = "No Data";
+                        player1_low_attack_times.Content = "No Data";
                         player1_hand_type.Content = "No Data";
+                        player1AttackTimes = 0;
                     }
                     if (bodyNumber < 2)
                     {
                         player2_depth.Content = "No Data";
-                        player2_x.Content = "No Data";
+                        player2_attack_times.Content = "No Data";
                         player2_y.Content = "No Data";
                         player2_hand_type.Content = "No Data";
+                        player2AttackTimes = 0;
                     }
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));

@@ -26,9 +26,9 @@
             <StatusBarItem Content="{Binding StatusText}" />
         </StatusBar>
         <Label x:Name="player1_depth" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" Width="85" FontSize="20" Margin="0,45,0,0"/>
-        <Label x:Name="player1_x" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" Width="85" FontSize="20"/>
-        <Label x:Name="player1_y" Content="Label" HorizontalAlignment="Left" Margin="90,0,0,0" VerticalAlignment="Top" Height="40" Width="85" FontSize="20"/>
-        <Label x:Name="player2_x" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" Width="85" FontSize="20" Margin="366,0,0,0"/>
+        <Label x:Name="player1_high_attack_times" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" Width="85" FontSize="20"/>
+        <Label x:Name="player1_low_attack_times" Content="Label" HorizontalAlignment="Left" Margin="90,0,0,0" VerticalAlignment="Top" Height="40" Width="85" FontSize="20"/>
+        <Label x:Name="player2_attack_times" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" Width="85" FontSize="20" Margin="366,0,0,0"/>
         <Label x:Name="player2_y" Content="Label" HorizontalAlignment="Left" Margin="456,0,0,0" VerticalAlignment="Top" Height="40" Width="85" FontSize="20"/>
         <Label x:Name="player2_depth" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" Width="85" FontSize="20" Margin="366,45,0,0"/>
         <Label x:Name="player1_hand_type" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Height="40" Width="85" FontSize="20" Margin="90,45,0,0" RenderTransformOrigin="1.835,0.825"/>
