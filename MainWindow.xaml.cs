@@ -140,14 +140,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private string statusText = null;
 
         /// <summary>
-        /// 判斷擊球相關變數
-        /// </summary>
-        private bool handUp = false;
-        private bool hitTheBall = false;
-        private int hitNum_first = 0;
-        private int hitNum_second = 0;
-
-        /// <summary>
         /// Reader for depth frames
         /// </summary>
         private DepthFrameReader depthFrameReader = null;
@@ -157,7 +149,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private FrameDescription depthFrameDescription = null;
 
-        private ushort[] depthArr = null;
+        private ushort[] depthArr = { };
 
 
         /// <summary>
@@ -312,7 +304,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             // depth frame data is a 16 bit value
             ushort* frameData = (ushort*)depthFrameData;
-
+            Array.Resize(ref this.depthArr, (int)(depthFrameDataSize / this.depthFrameDescription.BytesPerPixel));
             // iterate depth array
             for (int i = 0; i < (int)(depthFrameDataSize / this.depthFrameDescription.BytesPerPixel); ++i)
             {
@@ -430,15 +422,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
 
                     int penIndex = 0;
-                    int bodynumber = 0;
+                    int bodyNumber = 0;
                     foreach (Body body in this.bodies)
                     {
                         Pen drawPen = this.bodyColors[penIndex++];
-
+                        
                         if (body.IsTracked)
                         {
-                            bodynumber++;
-                            int my_rightShoulder = 0, my_rightHand = 0, my_rightElbow = 0;
+                            bodyNumber++;
+                            int xValue = 0, yValue = 0;
                             this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
@@ -460,82 +452,51 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
 
                                 //讀取各節點XY數值
-                                if (jointType == JointType.ShoulderRight)
+                                if(jointType == JointType.ShoulderRight)
                                 {
-                                    if (bodynumber == 1)
-                                        label_shoulder_r_first.Content = depthSpacePoint.Y;
-                                    if (bodynumber == 2)
-                                        label_shoulder_r_second.Content = depthSpacePoint.Y;
-                                    my_rightShoulder = (int)depthSpacePoint.Y;
+                                    
                                 }
                                 if (jointType == JointType.HandRight)
                                 {
-                                    if (bodynumber == 1)
-                                        label_handup_r_first.Content = depthSpacePoint.Y;
-                                    if (bodynumber == 2)
-                                        label_handup_r_second.Content = depthSpacePoint.Y;
-                                    //label_attack.Content = penIndex;
-                                    my_rightHand = (int)depthSpacePoint.Y;
-                                }
-                                if (jointType == JointType.ElbowRight)
-                                {
-                                    my_rightElbow = (int)depthSpacePoint.Y;
-                                }
-
-                            }
-
-                            if (my_rightElbow < my_rightShoulder)
-                            {
-                                handUp = true;
-                                if (bodynumber == 1)
-                                    label_handup_r_first.Content = "yes";
-                                if (bodynumber == 2)
-                                    label_handup_r_second.Content = "yes";
-                            }
-
-                            if (handUp)
-                            {
-                                if (my_rightElbow > my_rightShoulder && body.HandRightState == HandState.Closed)
-                                {
-                                    hitTheBall = true;
-                                    if (bodynumber == 1)
+                                    if (bodyNumber == 1)
                                     {
-                                        label_attack_first.Content = ++hitNum_first;
+                                        player1_y.Content = depthSpacePoint.Y;
+                                        yValue = (int)depthSpacePoint.Y;
+                                        player1_x.Content = depthSpacePoint.X;
+                                        xValue = (int)depthSpacePoint.X;
+                                        int depthLocation = yValue * this.displayWidth + xValue;
+                                        if (depthLocation >= 0 && depthLocation < this.displayWidth * this.displayHeight)
+                                            player1_depth.Content = this.depthArr[depthLocation];
                                     }
-                                    if (bodynumber == 2)
+                                    if (bodyNumber == 2)
                                     {
-                                        label_attack_second.Content = ++hitNum_second;
+                                        player2_y.Content = depthSpacePoint.Y;
+                                        yValue = (int)depthSpacePoint.Y;
+                                        player2_x.Content = depthSpacePoint.X;
+                                        xValue = (int)depthSpacePoint.X;
+                                        int depthLocation = yValue * this.displayWidth + xValue;
+                                        if (depthLocation >= 0 && depthLocation < this.displayWidth * this.displayHeight)
+                                            player2_depth.Content = this.depthArr[depthLocation];
                                     }
 
                                 }
+
+
                             }
-                            if (my_rightElbow > my_rightShoulder)
+
+                            /*if(xValue>yValue)
                             {
-                                handUp = false;
-                                if (bodynumber == 1)
-                                    label_handup_r_first.Content = "No";
-                                if (bodynumber == 2)
-                                    label_handup_r_second.Content = "No";
-                                hitTheBall = false;
+                                label.Content = "yes";
+
                             }
-                            //
+                            else
+                            {
+                                label.Content = "false";
+                            }*/
                             this.DrawBody(joints, jointPoints, dc, drawPen);
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
                         }
-                    }
-
-                    if (bodynumber < 1)
-                    {
-                        label_handup_r_first.Content = "No Data";
-                        label_hand_r_first.Content = "No Data";
-                        label_shoulder_r_first.Content = "No Data";
-                    }
-                    if (bodynumber < 2)
-                    {
-                        label_handup_r_second.Content = "No Data";
-                        label_hand_r_second.Content = "No Data";
-                        label_shoulder_r_second.Content = "No Data";
                     }
 
                     // prevent drawing outside of our render area
