@@ -430,13 +430,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         if (body.IsTracked)
                         {
                             bodyNumber++;
-                            int xValue = 0, yValue = 0;
                             this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
 
                             // convert the joint points to depth (display) space
                             Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
+
+                            ///get value
+                            int depthLocation = 0, depth = 0;
+                            int xValue = 0, yValue = 0;
+                            int rightHandYValue = 0, rightShoulderYValue = 0, rightElbowYVlue = 0;
+                            bool highHand = false;
 
                             foreach (JointType jointType in joints.Keys)
                             {
@@ -452,53 +457,85 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
 
                                 //讀取各節點XY數值
-                                if(jointType == JointType.ShoulderRight)
+                                if (jointType == JointType.SpineBase || jointType == JointType.SpineMid || jointType == JointType.HipLeft || jointType == JointType.HipRight)
                                 {
-                                    
+                                    yValue = (int)depthSpacePoint.Y;
+                                    xValue = (int)depthSpacePoint.X;
+                                    depthLocation = yValue * this.displayWidth + xValue;
+                                    depth += this.depthArr[depthLocation];
+                                }
+                                if (jointType == JointType.ShoulderRight)
+                                {
+                                    yValue = (int)depthSpacePoint.Y;
+                                    rightShoulderYValue = yValue;
+                                }
+                                if (jointType == JointType.ElbowRight)
+                                {
+                                    yValue = (int)depthSpacePoint.Y;
+                                    rightElbowYVlue = yValue;
                                 }
                                 if (jointType == JointType.HandRight)
                                 {
-                                    if (bodyNumber == 1)
-                                    {
-                                        player1_y.Content = depthSpacePoint.Y;
-                                        yValue = (int)depthSpacePoint.Y;
-                                        player1_x.Content = depthSpacePoint.X;
-                                        xValue = (int)depthSpacePoint.X;
-                                        int depthLocation = yValue * this.displayWidth + xValue;
-                                        if (depthLocation >= 0 && depthLocation < this.displayWidth * this.displayHeight)
-                                            player1_depth.Content = this.depthArr[depthLocation];
-                                    }
-                                    if (bodyNumber == 2)
-                                    {
-                                        player2_y.Content = depthSpacePoint.Y;
-                                        yValue = (int)depthSpacePoint.Y;
-                                        player2_x.Content = depthSpacePoint.X;
-                                        xValue = (int)depthSpacePoint.X;
-                                        int depthLocation = yValue * this.displayWidth + xValue;
-                                        if (depthLocation >= 0 && depthLocation < this.displayWidth * this.displayHeight)
-                                            player2_depth.Content = this.depthArr[depthLocation];
-                                    }
-
+                                    yValue = (int)depthSpacePoint.Y;
+                                    rightHandYValue = yValue;
                                 }
-
-
                             }
 
-                            /*if(xValue>yValue)
+                            depth /= 4;
+                            if(rightHandYValue < rightElbowYVlue) //越往下y值越大
                             {
-                                label.Content = "yes";
-
+                                highHand = true;
                             }
                             else
                             {
-                                label.Content = "false";
-                            }*/
+                                highHand = false;
+                            }
+
+                            if(bodyNumber == 1)
+                            {
+                                player1_depth.Content = depth;
+                                if(highHand)
+                                {
+                                    player1_hand_type.Content = "High";
+                                }
+                                else
+                                {
+                                    player1_hand_type.Content = "Low";
+                                }
+                            }
+                            if (bodyNumber == 2)
+                            {
+                                player2_depth.Content = depth;
+                                if (highHand)
+                                {
+                                    player2_hand_type.Content = "High";
+                                }
+                                else
+                                {
+                                    player2_hand_type.Content = "Low";
+                                }
+                            }
+
                             this.DrawBody(joints, jointPoints, dc, drawPen);
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
                         }
                     }
 
+                    if(bodyNumber<1)
+                    {
+                        player1_depth.Content = "No Data";
+                        player1_x.Content = "No Data";
+                        player1_y.Content = "No Data";
+                        player1_hand_type.Content = "No Data";
+                    }
+                    if (bodyNumber < 2)
+                    {
+                        player2_depth.Content = "No Data";
+                        player2_x.Content = "No Data";
+                        player2_y.Content = "No Data";
+                        player2_hand_type.Content = "No Data";
+                    }
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
